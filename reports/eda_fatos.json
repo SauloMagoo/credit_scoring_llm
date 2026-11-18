@@ -1,0 +1,22 @@
+{
+  "linhas": 750000,
+  "taxa_alvo": 0.078191,
+  "n_mau": 58643,
+  "baseline_acuracia_sempre_0": 0.921809,
+  "baseline_f1_sempre_1": 0.145041,
+  "ausentes": {
+    "tempo_emprego": 0.167943
+  },
+  "drift_taxa_mensal_min": {
+    "mes": "2015-07-01",
+    "taxa": 0.02722
+  },
+  "drift_taxa_mensal_max": {
+    "mes": "2016-03-01",
+    "taxa": 0.16816
+  },
+  "n_meses": 15,
+  "n_clientes": 16650,
+  "duplicatas_exatas": 0,
+  "duplicatas_sem_unnamed0": 469661
+}

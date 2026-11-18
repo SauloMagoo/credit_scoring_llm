@@ -5,6 +5,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 DATA_PATH = ROOT / "data" / "credit_scoring.csv"
 DATA_PATH_FALLBACK = ROOT / "credit_scoring.csv"
+REPORTS_DIR = ROOT / "reports"
 
 RANDOM_STATE = 42
 
