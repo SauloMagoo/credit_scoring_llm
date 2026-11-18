@@ -6,8 +6,13 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = ROOT / "data" / "credit_scoring.csv"
 DATA_PATH_FALLBACK = ROOT / "credit_scoring.csv"
 REPORTS_DIR = ROOT / "reports"
+MODELS_DIR = ROOT / "models"
+MODEL_PATH = MODELS_DIR / "modelo.joblib"
 
 RANDOM_STATE = 42
+N_FOLDS = 10
+# Linhas do treino 2015 gravadas para a aba Dados do app.
+N_APP_SAMPLE = 5_000
 
 TEST_START = "2016-01-01"
 N_TRAIN = 50_000

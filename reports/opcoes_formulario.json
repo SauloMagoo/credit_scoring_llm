@@ -1,0 +1,82 @@
+{
+  "numericas": {
+    "qtd_filhos": {
+      "min": 0,
+      "max": 14,
+      "mediana": 0,
+      "inteiro": true,
+      "permite_ausente": false
+    },
+    "idade": {
+      "min": 22,
+      "max": 68,
+      "mediana": 43,
+      "inteiro": true,
+      "permite_ausente": false
+    },
+    "tempo_emprego": {
+      "min": 0.1178082191780822,
+      "max": 42.90684931506849,
+      "mediana": 6.016438356164383,
+      "inteiro": false,
+      "permite_ausente": true
+    },
+    "qt_pessoas_residencia": {
+      "min": 1,
+      "max": 15,
+      "mediana": 2,
+      "inteiro": true,
+      "permite_ausente": false
+    },
+    "renda": {
+      "min": 168.02,
+      "max": 2673757.35,
+      "mediana": 9861.05,
+      "inteiro": false,
+      "permite_ausente": false
+    }
+  },
+  "categoricas": {
+    "sexo": [
+      "F",
+      "M"
+    ],
+    "posse_de_veiculo": [
+      "N",
+      "S"
+    ],
+    "posse_de_imovel": [
+      "N",
+      "S"
+    ],
+    "tipo_renda": [
+      "Assalariado",
+      "Bolsista",
+      "Empresário",
+      "Pensionista",
+      "Servidor público"
+    ],
+    "educacao": [
+      "Fundamental",
+      "Médio",
+      "Pós graduação",
+      "Superior completo",
+      "Superior incompleto"
+    ],
+    "estado_civil": [
+      "Casado",
+      "Separado",
+      "Solteiro",
+      "União",
+      "Viúvo"
+    ],
+    "tipo_residencia": [
+      "Aluguel",
+      "Casa",
+      "Com os pais",
+      "Comunitário",
+      "Estúdio",
+      "Governamental"
+    ]
+  }
+}

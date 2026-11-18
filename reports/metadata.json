@@ -1,0 +1,127 @@
+{
+  "modelo": "arvore_decisao",
+  "class_weight": "None",
+  "limiar": 0.137363,
+  "regra_decisao": "mau previsto quando predict_proba[:, 1] >= limiar",
+  "criterio_escolha": "maior F1 OOF; desempate por recall OOF e depois ROC/AUC OOF",
+  "criterio_limiar": "limiar de maior F1 OOF (precision_recall_curve) no treino 2015",
+  "parametros": {
+    "ccp_alpha": 0.0,
+    "class_weight": null,
+    "criterion": "gini",
+    "max_depth": 4,
+    "max_features": null,
+    "max_leaf_nodes": null,
+    "min_impurity_decrease": 0.0,
+    "min_samples_leaf": 1,
+    "min_samples_split": 2,
+    "min_weight_fraction_leaf": 0.0,
+    "monotonic_cst": null,
+    "random_state": 42,
+    "splitter": "best"
+  },
+  "metricas_oof": {
+    "limiar": 0.137363,
+    "acuracia": 0.8847,
+    "precisao": 0.216674,
+    "recall": 0.339666,
+    "f1": 0.264575,
+    "roc_auc": 0.75921,
+    "tn": 43198,
+    "fp": 3749,
+    "fn": 2016,
+    "tp": 1037
+  },
+  "metricas_oof_limiar_05": {
+    "limiar": 0.5,
+    "acuracia": 0.9383,
+    "precisao": 0.152174,
+    "recall": 0.002293,
+    "f1": 0.004518,
+    "roc_auc": 0.75921,
+    "tn": 46908,
+    "fp": 39,
+    "fn": 3046,
+    "tp": 7
+  },
+  "metricas_teste": {
+    "limiar": 0.137363,
+    "acuracia": 0.655867,
+    "precisao": 0.254355,
+    "recall": 0.696502,
+    "f1": 0.37263,
+    "roc_auc": 0.728517,
+    "tn": 8305,
+    "fp": 4494,
+    "fn": 668,
+    "tp": 1533
+  },
+  "metricas_teste_limiar_05": {
+    "limiar": 0.5,
+    "acuracia": 0.8524,
+    "precisao": 0.190476,
+    "recall": 0.001817,
+    "f1": 0.0036,
+    "roc_auc": 0.728517,
+    "tn": 12782,
+    "fp": 17,
+    "fn": 2197,
+    "tp": 4
+  },
+  "features_numericas": [
+    "qtd_filhos",
+    "idade",
+    "tempo_emprego",
+    "qt_pessoas_residencia",
+    "renda"
+  ],
+  "features_categoricas": [
+    "sexo",
+    "posse_de_veiculo",
+    "posse_de_imovel",
+    "tipo_renda",
+    "educacao",
+    "estado_civil",
+    "tipo_residencia"
+  ],
+  "colunas_proibidas": [
+    "Unnamed: 0",
+    "index",
+    "data_ref",
+    "mau"
+  ],
+  "alvo": "mau",
+  "split": {
+    "treino": {
+      "periodo": [
+        "2015-01-01",
+        "2015-12-01"
+      ],
+      "linhas": 50000,
+      "taxa_mau": 0.06106
+    },
+    "teste": {
+      "periodo": [
+        "2016-01-01",
+        "2016-03-01"
+      ],
+      "linhas": 15000,
+      "taxa_mau": 0.146733
+    }
+  },
+  "validacao_cruzada": {
+    "tipo": "StratifiedGroupKFold",
+    "n_splits": 10,
+    "shuffle": true,
+    "grupos": "index"
+  },
+  "random_state": 42,
+  "modelo_arquivo": "models/modelo.joblib",
+  "versoes": {
+    "python": "3.13.17",
+    "scikit-learn": "1.9.1",
+    "pandas": "3.1.1",
+    "numpy": "2.5.4",
+    "joblib": "1.6.0"
+  }
+}

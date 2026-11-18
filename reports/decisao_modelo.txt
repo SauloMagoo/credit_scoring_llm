@@ -1,0 +1,23 @@
+Decisao do modelo
+=================
+
+Criterio (definido antes de olhar o teste): maior F1 out-of-fold no treino 2015,
+StratifiedGroupKFold com 10 folds agrupados por index. Desempate por recall OOF e depois ROC/AUC OOF.
+Cada experimento e comparado no seu proprio limiar de maior F1 OOF.
+
+Ranking OOF (treino 2015):
+ posicao         experimento  class_weight  limiar     f1  recall  precisao  roc_auc  f1_limiar_05
+       1      arvore_decisao          None  0.1374 0.2646  0.3397    0.2167   0.7592        0.0045
+       2      arvore_decisao      balanced  0.7238 0.2618  0.3282    0.2177   0.7580        0.2103
+       3 regressao_logistica          None  0.1128 0.2446  0.4199    0.1725   0.7584        0.0000
+       4 regressao_logistica      balanced  0.6299 0.2398  0.4504    0.1634   0.7557        0.1856
+       5       random_forest          None  0.1078 0.2010  0.3868    0.1357   0.6920        0.0662
+       6       random_forest      balanced  0.1924 0.1955  0.4527    0.1247   0.6941        0.1400
+       7                 knn nao_aplicavel  0.0773 0.1556  0.3953    0.0969   0.6153        0.0605
+
+Escolhido: arvore_decisao (None), limiar 0.137363.
+F1 OOF 0.2646 contra 0.2618 do segundo colocado (arvore_decisao, balanced).
+
+Teste 2016 (medido depois da escolha, nao usado para escolher modelo nem limiar):
+  limiar OOF 0.1374: F1 0.3726 | recall 0.6965 | precisao 0.2544 | acuracia 0.6559 | AUC 0.7285 | TN 8305 FP 4494 FN 668 TP 1533
+  limiar 0,5 (so comparacao): F1 0.0036 | recall 0.0018 | precisao 0.1905 | acuracia 0.8524 | AUC 0.7285 | TN 12782 FP 17 FN 2197 TP 4
