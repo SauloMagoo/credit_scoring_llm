@@ -15,6 +15,12 @@ import pandas as pd  # noqa: E402
 import seaborn as sns  # noqa: E402
 from matplotlib.colors import LinearSegmentedColormap  # noqa: E402
 from matplotlib.ticker import PercentFormatter  # noqa: E402
+from sklearn.base import BaseEstimator  # noqa: E402
+from sklearn.compose import ColumnTransformer  # noqa: E402
+from sklearn.impute import SimpleImputer  # noqa: E402
+from sklearn.model_selection import train_test_split  # noqa: E402
+from sklearn.pipeline import Pipeline  # noqa: E402
+from sklearn.preprocessing import OneHotEncoder, StandardScaler  # noqa: E402
 
 from config import (  # noqa: E402
     CATEGORICAL_FEATURES,
@@ -24,10 +30,14 @@ from config import (  # noqa: E402
     FEATURES,
     FORBIDDEN_FEATURES,
     GROUP_COL,
+    N_TEST,
+    N_TRAIN,
     NUMERIC_FEATURES,
+    RANDOM_STATE,
     REPORTS_DIR,
     REQUIRED_COLUMNS,
     TARGET,
+    TEST_START,
 )
 
 _BOOL_MAP = {"true": 1, "false": 0, "1": 1, "0": 0}
@@ -265,6 +275,75 @@ def run_eda(df: pd.DataFrame) -> dict:
     return facts
 
 
+# ------------------------------------------------- split temporal e pre-processamento
+
+
+def sample_stratified(df: pd.DataFrame, n: int) -> pd.DataFrame:
+    strata = df[DATE_COL].astype(str) + "_" + df[TARGET].astype(str)
+    sample, _ = train_test_split(df, train_size=n, stratify=strata, random_state=RANDOM_STATE)
+    return sample.sort_index()
+
+
+def temporal_split(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    # Filtra o periodo antes de amostrar para que nenhuma linha de 2016 entre no treino.
+    dates = pd.to_datetime(df[DATE_COL])
+    cutoff = pd.Timestamp(TEST_START)
+    train = sample_stratified(df[dates < cutoff], N_TRAIN)
+    test = sample_stratified(df[dates >= cutoff], N_TEST)
+    assert pd.to_datetime(train[DATE_COL]).max() < cutoff <= pd.to_datetime(test[DATE_COL]).min()
+    return train, test
+
+
+def report_split(train: pd.DataFrame, test: pd.DataFrame, df: pd.DataFrame) -> None:
+    for name, part in (("Treino", train), ("Teste", test)):
+        print(f"{name}: {len(part):,} linhas | {part[DATE_COL].min()} a {part[DATE_COL].max()} | "
+              f"mau=1 {int(part[TARGET].sum()):,} ({part[TARGET].mean():.2%}) | "
+              f"clientes {part[GROUP_COL].nunique():,}")
+    shared = set(train[GROUP_COL]) & set(test[GROUP_COL])
+    print(f"Clientes nas duas amostras (treino e teste): {len(shared):,} "
+          f"({len(shared) / test[GROUP_COL].nunique():.2%} dos clientes do teste)")
+    dates = pd.to_datetime(df[DATE_COL])
+    cutoff = pd.Timestamp(TEST_START)
+    shared_full = set(df.loc[dates < cutoff, GROUP_COL]) & set(df.loc[dates >= cutoff, GROUP_COL])
+    print(f"Clientes nos dois periodos (base completa, 2015 e 2016): {len(shared_full):,}")
+
+
+def build_preprocessor() -> ColumnTransformer:
+    numeric = Pipeline([
+        ("imputer", SimpleImputer(strategy="median", add_indicator=True)),
+        ("scaler", StandardScaler()),
+    ])
+    categorical = Pipeline([
+        ("imputer", SimpleImputer(strategy="most_frequent")),
+        ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
+    ])
+    # remainder="drop": index, data_ref, Unnamed: 0 e o alvo nunca chegam ao modelo.
+    return ColumnTransformer(
+        [("num", numeric, NUMERIC_FEATURES), ("cat", categorical, CATEGORICAL_FEATURES)],
+        remainder="drop",
+    )
+
+
+def build_pipeline(model: BaseEstimator) -> Pipeline:
+    return Pipeline([("preprocess", build_preprocessor()), ("model", model)])
+
+
+def check_preprocessor(X_train: pd.DataFrame, X_test: pd.DataFrame) -> None:
+    # Ajuste so no treino; o teste passa apenas por transform para conferir o formato.
+    preprocessor = build_preprocessor().fit(X_train)
+    names = list(preprocessor.get_feature_names_out())
+    leaked = [n for n in names if any(col in n for col in FORBIDDEN_FEATURES)]
+    assert not leaked, f"Colunas proibidas no pre-processamento: {leaked}"
+    Xt_train = preprocessor.transform(X_train)
+    Xt_test = preprocessor.transform(X_test)
+    assert not np.isnan(Xt_train).any() and not np.isnan(Xt_test).any()
+    medians = preprocessor.named_transformers_["num"].named_steps["imputer"].statistics_
+    print(f"Pre-processamento ajustado no treino: {len(names)} colunas de saida")
+    print(f"  shape treino {Xt_train.shape} | shape teste (so transform) {Xt_test.shape}")
+    print(f"  medianas do treino: {dict(zip(NUMERIC_FEATURES, np.round(medians, 4)))}")
+    print(f"  colunas: {names}")
+
+
 def main() -> None:
     df = load_data()
     X, y = split_features_target(df)
@@ -273,6 +352,12 @@ def main() -> None:
     print("Fatos da EDA:")
     for key, value in facts.items():
         print(f"  {key}: {value}")
+
+    train, test = temporal_split(df)
+    report_split(train, test, df)
+    X_train, _ = split_features_target(train)
+    X_test, _ = split_features_target(test)
+    check_preprocessor(X_train, X_test)
 
 
 if __name__ == "__main__":

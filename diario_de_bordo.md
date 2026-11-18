@@ -8,6 +8,7 @@
 | 2 | 18/11 15:44 | Etapa 0 | Prompt da Etapa 0 do guia, em modo de planejamento | Perguntou em qual limiar comparar o F1 OOF e quais seriam os 4 algoritmos, partindo de "8 candidatos"; apresentou um plano em etapas | Plano conferido com os 4 itens do guia: split temporal e CV por cliente, teste reservado, limiar por F1 OOF, acuracia nao e criterio unico | Premissa de 8 candidatos corrigida: 4 algoritmos do guia, KNN sem class_weight, 7 experimentos | Limiar: F1 OOF no limiar calibrado de cada experimento (Etapa 5 do guia). Plano aprovado pelos criterios do guia; a implementacao segue os prompts das Etapas 1 a 8 | OK |
 | 3 | 18/11 15:53 | Etapa 1 | Prompt da Etapa 1 do guia | Criou src/config.py e src/train_eval.py; rodou o script; investigou por conta propria as duplicatas ignorando Unnamed: 0 (469.661) e encontrou o mesmo cliente repetido no mesmo mes (media 3,16, maximo 14) | Shape, taxa de mau, clientes, ausentes e colunas fora das features iguais ao guia; diffs revisados antes de aprovar | - | Manter todas as linhas (ver decisao 6) | OK |
 | 4 | 18/11 16:03 | Etapa 2 | Prompt da Etapa 2 do guia | Tentou criar src/eda.py (recusado) e gravar memoria fora do projeto (recusado; apagou o arquivo que tinha criado). Depois colocou a EDA em src/train_eval.py, gerou os 5 PNGs e reports/eda_fatos.json e corrigiu rotulos do grafico de ausentes | Drift 2,72% (2015-07) a 16,82% (2016-03) e so tempo_emprego com ausentes, iguais ao guia. Divergencia: na correlacao de Pearson a mais forte foi tempo_emprego (-0,13), nao renda | Correcoes 2 e 3 | Versionar reports/ (artefatos da estrutura do guia); manter eda_fatos.json | OK |
+| 5 | 18/11 16:08 | Etapa 3 | Prompt da Etapa 3 do guia | Criou o split temporal (filtra o periodo antes de amostrar), a amostragem estratificada por data_ref + mau, o ColumnTransformer e o build_pipeline; checou que o pre-processamento e ajustado so no treino | 50.000/15.000 linhas, mau 6,11%/14,67% e 9.421 clientes nos dois periodos, iguais ao guia; fit so no treino | - | Prosseguir | OK |
 
 ## Decisoes humanas com pros e contras
 1. Projeto em C:\Projetos (disco local). Pros: fora da sincronizacao do OneDrive. Contras: nenhum para o guia, que nao fixa o local.
@@ -37,9 +38,13 @@
 | Baseline (acuracia, base inteira) | 92,18% | 92,18% |
 | Ausentes relevantes | so tempo_emprego | so tempo_emprego (16,79%) |
 | Variavel com maior sinal | renda | tempo_emprego (Pearson -0,13); divergente |
+| Treino / teste | 50.000 / 15.000 | 50.000 / 15.000 |
+| mau=1 treino / teste | 6,11% / 14,67% | 6,11% / 14,67% |
+| Clientes nos dois periodos (amostras) | ~9.421 | 9.421 |
 
 ## Limitacoes conhecidas
 
 - O mesmo cliente aparece varias vezes no mesmo mes (469.661 linhas repetidas ignorando Unnamed: 0).
 - Drift forte: taxa de mau de 2,72% (2015-07) a 16,82% (2016-03); o teste (2016) tem taxa bem acima do treino.
 - Na EDA, a correlacao de Pearson (renda bruta) nao mostrou a renda como variavel de maior sinal, ao contrario do guia.
+- 95% dos clientes do teste tambem estao no treino (9.421); nao e vazamento do alvo (meses diferentes), mas deixa o teste parecido com o treino.

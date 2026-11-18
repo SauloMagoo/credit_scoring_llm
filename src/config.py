@@ -9,6 +9,10 @@ REPORTS_DIR = ROOT / "reports"
 
 RANDOM_STATE = 42
 
+TEST_START = "2016-01-01"
+N_TRAIN = 50_000
+N_TEST = 15_000
+
 TARGET = "mau"
 GROUP_COL = "index"
 DATE_COL = "data_ref"
