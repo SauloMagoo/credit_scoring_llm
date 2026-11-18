@@ -12,6 +12,15 @@
 | 6 | 18/11 16:12 | Etapa 4 | Prompt da Etapa 4 do guia | Criou os 7 experimentos (LR, Arvore e RF com None e balanced; KNN nao_aplicavel), todos com build_pipeline, ajustados so no treino e mantidos em memoria | 7 experimentos; parametros iguais ao prompt; teste nao usado; nenhum modelo em disco (models/ inexistente); ajuste total ~3 s | - | Prosseguir | OK |
 | 7 | 18/11 16:46 | Etapa 5 | Prompt da Etapa 5 do guia | Apresentou plano; implementou CV StratifiedGroupKFold (10 folds, grupos por index), limiar por F1 OOF, escolha por F1 OOF, avaliacao no teste e artefatos. Escolhido: arvore_decisao (class_weight=None), limiar 0,1374. Rodou o pipeline 3 vezes | Limiar, matriz e metricas no teste iguais a referencia do guia; teste lido so depois da escolha; folds sem cliente repetido; modelo.joblib 3,7 KB | Correcao 4 | Recusada a flag --sem-eda (fora do guia); models/modelo.joblib versionado (estrutura do guia) | OK |
 | 8 | 18/11 16:52 | Etapa 6 | Prompt da Etapa 6 do guia | Criou app.py com sidebar e as 5 abas, lendo so reports/ e models/modelo.joblib; renomeou class_weight para peso_classes antes do fillna("None"); trocou use_container_width por width="stretch"; testou em modo headless (caso padrao 4,11% bom; caso de risco 22,57% mau) | AppTest do guia sem excecoes; teste manual: 5 abas, botao, atualizacao sem recarregar, Enter nao dispara, limpar funciona; app nao chama fit nem le a base | - | Prosseguir | OK |
+| 9 | 18/11 17:01 | Etapa 7 | Prompt da Etapa 7 do guia: atualizar README.md, diario_de_bordo.md e relatorio.md com os numeros reais de reports/*.csv e reports/metadata.json | Leu metadata.json, metricas.csv, metricas_cv.csv, limiares_teste.csv, decisao_modelo.txt, eda_fatos.json, o codigo e o diario; criou README.md e relatorio.md e acrescentou ao diario esta linha e a secao de decisoes de metodologia | Numeros dos documentos conferidos por script contra metadata.json e metricas_cv.csv (ver Verificacoes) | - | Pendente de revisao humana | Em revisao |
+
+## Decisoes de metodologia (origem: CLAUDE.md e prompts do guia)
+1. Split temporal: treino em 2015 e teste em 2016-01 a 2016-03 (regra 3). Pros: simula o uso real (treinar no passado, prever o futuro) e expoe o drift (mau 6,11% no treino, 14,67% no teste). Contras: o teste tem taxa de mau bem diferente, o que derruba a precisao com o limiar calibrado em 2015.
+2. Amostragem: 50.000 linhas de 2015 e 15.000 de 2016, estratificadas por mes x alvo, random_state=42, filtrando o periodo antes de amostrar. Pros: preserva a taxa de mau de cada mes e impede linha de 2016 no treino; pipeline completo em ~48 s. Contras: usa 65.000 de 750.000 linhas.
+3. Balanceamento: nenhuma reamostragem (sem SMOTE ou undersampling); o desbalanceamento foi tratado comparando class_weight=None e "balanced" como experimentos e calibrando o limiar. Resultado: nas duas arvores o peso "balanced" so deslocou a escala das probabilidades (limiar 0,7238 contra 0,1374) e o F1 OOF ficou praticamente igual (0,2618 contra 0,2646). Pros: nada de dados sinteticos; a CV continua honesta. Contras: modelos sem peso dependem totalmente do limiar (F1 0,0045 no OOF com limiar 0,5).
+4. Limiar: o de maior F1 nas probabilidades OOF do vencedor, no treino 2015 (regra 6), igual a 0,137363. O teste nunca foi usado para isso. Pros: sem vazamento; recall no teste sobe de 0,18% (limiar 0,5) para 69,65%. Contras: calibrado com prevalencia de ~6%; no teste (~15%) gera muitos falsos positivos (4.494).
+5. Duplicatas: mantidas (ver decisao 6 abaixo). A CV com StratifiedGroupKFold por index impede o mesmo cliente em treino e validacao do mesmo fold.
+6. Ausentes: tempo_emprego (16,79%) imputado pela mediana dentro do Pipeline, com indicador de ausencia (add_indicator=True); categoricas com most_frequent (sem ausentes na base, mas protege o app). Pros: mediana calculada so no treino de cada fold; o modelo pode usar o fato de a informacao faltar. Contras: a mediana ignora a relacao de tempo_emprego com as outras variaveis.
 
 ## Decisoes humanas com pros e contras
 1. Projeto em C:\Projetos (disco local). Pros: fora da sincronizacao do OneDrive. Contras: nenhum para o guia, que nao fixa o local.
@@ -53,6 +62,9 @@
 | Matriz (TN/FP/FN/TP) | 8.305 / 4.494 / 668 / 1.533 | 8.305 / 4.494 / 668 / 1.533 |
 | Acuracia / precisao / recall / F1 / AUC (teste) | 0,656 / 0,254 / 0,697 / 0,373 / 0,729 | 0,6559 / 0,2544 / 0,6965 / 0,3726 / 0,7285 |
 | Tempo do pipeline completo | ~9-10 min | ~48 s |
+| Modelo escolhido (F1 OOF) | (definido pelo pipeline) | arvore_decisao, class_weight=None, max_depth=4 |
+| F1 / recall / precisao / AUC OOF do escolhido | (definido pelo pipeline) | 0,2646 / 0,3397 / 0,2167 / 0,7592 |
+| F1 OOF do segundo colocado | (definido pelo pipeline) | 0,2618 (arvore_decisao, balanced) |
 
 ## Limitacoes conhecidas
 
