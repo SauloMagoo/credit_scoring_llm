@@ -3,6 +3,8 @@
 Execucao: .\\.venv\\Scripts\\python.exe src\\train_eval.py
 """
 import json
+import time
+from dataclasses import dataclass
 from pathlib import Path
 
 import matplotlib
@@ -17,10 +19,14 @@ from matplotlib.colors import LinearSegmentedColormap  # noqa: E402
 from matplotlib.ticker import PercentFormatter  # noqa: E402
 from sklearn.base import BaseEstimator  # noqa: E402
 from sklearn.compose import ColumnTransformer  # noqa: E402
+from sklearn.ensemble import RandomForestClassifier  # noqa: E402
 from sklearn.impute import SimpleImputer  # noqa: E402
+from sklearn.linear_model import LogisticRegression  # noqa: E402
 from sklearn.model_selection import train_test_split  # noqa: E402
+from sklearn.neighbors import KNeighborsClassifier  # noqa: E402
 from sklearn.pipeline import Pipeline  # noqa: E402
 from sklearn.preprocessing import OneHotEncoder, StandardScaler  # noqa: E402
+from sklearn.tree import DecisionTreeClassifier  # noqa: E402
 
 from config import (  # noqa: E402
     CATEGORICAL_FEATURES,
@@ -344,6 +350,58 @@ def check_preprocessor(X_train: pd.DataFrame, X_test: pd.DataFrame) -> None:
     print(f"  colunas: {names}")
 
 
+# ------------------------------------------------------------------ experimentos
+
+
+@dataclass
+class Experiment:
+    name: str
+    class_weight: str
+    pipeline: Pipeline
+    fit_seconds: float = 0.0
+
+
+def build_experiments() -> list[Experiment]:
+    experiments = []
+    for weight in (None, "balanced"):
+        label = "balanced" if weight else "None"
+        models = {
+            "regressao_logistica": LogisticRegression(
+                max_iter=2000, class_weight=weight, random_state=RANDOM_STATE),
+            "arvore_decisao": DecisionTreeClassifier(
+                max_depth=4, class_weight=weight, random_state=RANDOM_STATE),
+            "random_forest": RandomForestClassifier(
+                n_estimators=300, n_jobs=-1, class_weight=weight, random_state=RANDOM_STATE),
+        }
+        experiments += [Experiment(name, label, build_pipeline(model))
+                        for name, model in models.items()]
+    # KNN nao tem class_weight nem random_state.
+    knn = KNeighborsClassifier(n_neighbors=25, weights="distance", n_jobs=-1)
+    experiments.append(Experiment("knn", "nao_aplicavel", build_pipeline(knn)))
+    return experiments
+
+
+def fit_experiments(X_train: pd.DataFrame, y_train: pd.Series) -> list[Experiment]:
+    # Modelos ficam so em memoria: nenhum e salvo em disco (Random Forests ocupam muito espaco).
+    experiments = build_experiments()
+    for exp in experiments:
+        start = time.perf_counter()
+        exp.pipeline.fit(X_train, y_train)
+        exp.fit_seconds = time.perf_counter() - start
+        print(f"  {exp.name:<20} class_weight={exp.class_weight:<14} "
+              f"ajuste {exp.fit_seconds:6.1f}s")
+    return experiments
+
+
+def check_experiments(experiments: list[Experiment], X_train: pd.DataFrame) -> None:
+    assert len(experiments) == 7, f"Esperados 7 experimentos, obtidos {len(experiments)}"
+    for exp in experiments:
+        proba = exp.pipeline.predict_proba(X_train)[:, 1]
+        assert proba.shape == (len(X_train),) and ((proba >= 0) & (proba <= 1)).all()
+    print(f"{len(experiments)} experimentos ajustados no treino e mantidos em memoria; "
+          f"predict_proba com shape ({len(X_train):,},) e valores em [0, 1]")
+
+
 def main() -> None:
     df = load_data()
     X, y = split_features_target(df)
@@ -355,9 +413,13 @@ def main() -> None:
 
     train, test = temporal_split(df)
     report_split(train, test, df)
-    X_train, _ = split_features_target(train)
+    X_train, y_train = split_features_target(train)
     X_test, _ = split_features_target(test)
     check_preprocessor(X_train, X_test)
+
+    print("Experimentos (ajuste no treino 2015):")
+    experiments = fit_experiments(X_train, y_train)
+    check_experiments(experiments, X_train)
 
 
 if __name__ == "__main__":
