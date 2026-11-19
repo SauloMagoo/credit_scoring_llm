@@ -5,6 +5,16 @@ cruzada agrupada por cliente e limiar calibrado no treino, mais um app Streamlit
 apenas le os artefatos gerados. Todo o codigo foi escrito com o Claude Code, sob revisao humana
 registrada em [diario_de_bordo.md](diario_de_bordo.md). Relatorio curto: [relatorio.md](relatorio.md).
 
+## Acesso rapido
+
+- **App online**: https://credit-scoring-llm.streamlit.app/
+- **Repositorio**: https://github.com/SauloMagoo/credit_scoring_llm
+- **Diario de bordo**: [diario_de_bordo.md](diario_de_bordo.md)
+- **Relatorio**: [relatorio.md](relatorio.md)
+- **Analise critica do uso de IA**: [analise_critica_ia.md](analise_critica_ia.md)
+
+Para rodar o app no proprio computador, siga as secoes "Instalacao" e "Execucao" abaixo.
+
 ## Base
 
 - Arquivo: `data/credit_scoring.csv` (nao versionado; baixar do Kaggle e salvar nesse caminho).
